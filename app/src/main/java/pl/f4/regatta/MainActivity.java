@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -15,11 +16,30 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -43,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mLatitudeText;
     private TextView mLongitudeText;
 
+//    RequestQueue queue = Volley.newRequestQueue(this);
+    String url ="http://www.google.com";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,6 +90,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    protected class Position{
+        public double latitude;
+        public double longitude;
+
+        Position() {
+            latitude = 0;
+            longitude = 0;
+        }
+
+        Position(double latitude,  double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+    }
+
     /**
      * Provides a simple way of getting a device's location and is well suited for
      * applications that do not require a fine-grained location and that do not need location
@@ -78,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @SuppressWarnings("MissingPermission")
     private void getLastLocation() {
+        Position position = new Position();
         mFusedLocationClient.getLastLocation()
                 .addOnCompleteListener(this, new OnCompleteListener<Location>() {
                     @Override
@@ -91,6 +129,17 @@ public class MainActivity extends AppCompatActivity {
                             mLongitudeText.setText(String.format(Locale.ENGLISH, "%s: %f",
                                     mLongitudeLabel,
                                     mLastLocation.getLongitude()));
+
+                            SendToServer.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // All your networking logic
+                                    // should be here
+                                }
+                            });
+                            //position.Latitude = mLastLocation.getLatitude();
+                            //position.Longitude =  mLastLocation.getLongitude();
+
                         } else {
                             Log.w(TAG, "getLastLocation:exception", task.getException());
                             showSnackbar(getString(R.string.no_location_detected));
@@ -212,6 +261,72 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
             }
+        }
+    }
+
+
+    class SendToServer extends AsyncTask<String,String,String> {
+
+//        protected MainActivity mainActivity;
+//
+//        protected SendToServer(MainActivity mainActivity) {
+//            this.mainActivity = mainActivity;
+//        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            // Request a string response from the provided URL.
+            try {
+                String address = "http://http://vps485240.ovh.net:8080/api/team/position";
+                JSONObject json = new JSONObject();
+                json.put("teamId", "Dummy Title");
+                json.put("lat", "Dummy Author");
+                json.put("lng", "Dummy Author");
+                json.put("time", "Dummy Author");
+                json.put("event", "Dummy Author");
+                String requestBody = json.toString();
+                URL url = new URL(address);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setDoOutput(true);
+                urlConnection.setRequestProperty("Content-Type", "application/json");
+                OutputStream outputStream = new BufferedOutputStream(urlConnection.getOutputStream());
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "utf-8"));
+                writer.write(requestBody);
+                writer.flush();
+                writer.close();
+                outputStream.close();
+
+                InputStream inputStream;
+                // get stream
+                if (urlConnection.getResponseCode() < HttpURLConnection.HTTP_BAD_REQUEST) {
+                    inputStream = urlConnection.getInputStream();
+                } else {
+                    inputStream = urlConnection.getErrorStream();
+                }
+                // parse stream
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                String temp, response = "";
+                while ((temp = bufferedReader.readLine()) != null) {
+                    response += temp;
+                }
+                // put into JSONObject
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("Content", response);
+                jsonObject.put("Message", urlConnection.getResponseMessage());
+                jsonObject.put("Length", urlConnection.getContentLength());
+                jsonObject.put("Type", urlConnection.getContentType());
+                return jsonObject.toString();
+            } catch (IOException | JSONException e) {
+                return e.toString();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            //Log.i(LOG_TAG, "POST RESPONSE: " + result);
+            Log.i("dd", "POST RESPONSE: " + result);
+            //mTextView.setText(result);
         }
     }
 }
