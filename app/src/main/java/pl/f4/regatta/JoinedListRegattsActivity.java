@@ -56,11 +56,6 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
         //button = (Button) findViewById(R.id.button2);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-//        try {
-//            cookie();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
         mAuthTask = new UserLoginTask("", "", this);
         mAuthTask.execute((Void) null);
 
@@ -119,6 +114,8 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
     @Override
     public void onItemClick(View view, int position) {
         //Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
+        HttpClient.teamID = adapter.getItem(position).split(":")[0];
+        HttpClient.mainActivity.choosedTeam = true;
         finish();
     }
 
@@ -162,11 +159,12 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
             try {
                 fieldsJson = new JSONObject(body);
                 JSONArray keys = fieldsJson.names();
-                for (int i = 1; i <= keys.length(); i++){
-                    JSONObject jsonobject = fieldsJson.getJSONObject(String.valueOf(i));
+                for (int i = 0; i < keys.length(); i++){
+                    int numerteam = keys.getInt(i);
+                    JSONObject jsonobject = fieldsJson.getJSONObject(String.valueOf(numerteam));
                     String id = jsonobject.getString("id");
                     String name = jsonobject.getString("name");
-                    eventsAttendedList.add(String.valueOf(i) + id + " " + name);
+                    eventsAttendedList.add(String.valueOf(keys.get(i)) + ":" + name);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

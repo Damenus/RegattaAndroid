@@ -146,6 +146,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView mLastUpdateTimeTextView;
     private WebView webview;
 
+    Boolean choosedTeam = false;
+
     RequestQueue queue;
     String url ="http://vps485240.ovh.net:8080/";
 
@@ -282,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
                 mLocationCallback, Looper.myLooper());
     }
 
-    private void startLocationUpdates() {
+    public void startLocationUpdates() {
         // Begin by checking if the device has the necessary location settings.
         mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
                 .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
@@ -349,13 +351,14 @@ public class MainActivity extends AppCompatActivity {
            // DateTimeFormatter Parser = DateTimeFormatter.ofPattern(pattern).ISO_DATE;
 
             //webview.reload();
-            HttpClient.SendPositionTask mAuthTask = new HttpClient.SendPositionTask(
-                    Long.decode("1"),
-                    mLastLocation.getLatitude(),
-                    mLastLocation.getLongitude(),
-                    mLastUpdateTime);
-            mAuthTask.execute((Void) null);
-
+            if(choosedTeam) {
+                HttpClient.SendPositionTask mAuthTask = new HttpClient.SendPositionTask(
+                        HttpClient.teamID,
+                        mLastLocation.getLatitude(),
+                        mLastLocation.getLongitude(),
+                        mLastUpdateTime);
+                mAuthTask.execute((Void) null);
+            }
 //            mLatitudeText.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
 //                    mCurrentLocation.getLatitude()));
 //            mLongitudeText.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,

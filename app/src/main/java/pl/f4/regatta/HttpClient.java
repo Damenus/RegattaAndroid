@@ -40,6 +40,7 @@ public class HttpClient {
 
     static String JSESSIONID;
     static String XSRFTOKEN;
+    static String teamID;
 
     public static DefaultHttpClient getInstance(){
         if(instance == null){
@@ -47,6 +48,10 @@ public class HttpClient {
         }
 
         return instance;
+    }
+
+    static void start() {
+        mainActivity.startLocationUpdates();
     }
 
     public static HttpResponse sendGet(String api) throws IOException{
@@ -105,14 +110,14 @@ public class HttpClient {
         private Double lat;
         private Double lng;
         private String time;
-        private Long teamId;
+        private String teamId;
         //String website = "http://vps485240.ovh.net:8080";
         String website = "http://192.168.0.150:8080";
         String api = "/api/positions";
 
 
-        public SendPositionTask(Long teamId, Double lat, Double lng, String time) {
-            this.teamId = teamId;
+        public SendPositionTask(String teamId, Double lat, Double lng, String time) {
+            this.teamId = HttpClient.teamID;
             this.lat = lat;
             this.lng = lng;
             this.shortTime = time;
@@ -189,7 +194,7 @@ public class HttpClient {
             mapa.put("lng", lng.toString());
             //mapa.put("time", "2018-06-06" + "T" + time.replace("PM","").replace("AM","").replace(" ","") + "+02:00[Europe/Warsaw]");
             mapa.put("time", time);
-            mapa.put("teamId", teamId.toString());
+            mapa.put("teamId", teamId);
 
             JSONObject json = new JSONObject(mapa);
             StringEntity entityJson = new StringEntity(json.toString());
@@ -221,12 +226,12 @@ public class HttpClient {
                 //finish();
                 Toast.makeText(
                         HttpClient.getMainActivity(),
-                        "Send position Lat:" + lat.toString() +
+                        "Position Lat:" + lat.toString() +
                             ", Lng:" + lng.toString() +
                             ", Time:" + shortTime,
                         Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(HttpClient.getMainActivity(), "Not send position", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HttpClient.getMainActivity(), "Problem position", Toast.LENGTH_SHORT).show();
             }
         }
 
