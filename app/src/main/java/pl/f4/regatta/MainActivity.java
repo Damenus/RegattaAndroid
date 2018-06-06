@@ -58,8 +58,12 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -148,7 +152,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        launchLoginActivity();
+        // Send info
+        queue = Volley.newRequestQueue(this);
+
+        HttpClient.setMainActivity(this);
+
+        //launchMapActivity();
+        launchLoginActivity(queue);
 
         mLatitudeLabel = getResources().getString(R.string.latitude_label);
         mLongitudeLabel = getResources().getString(R.string.longitude_label);
@@ -171,8 +181,6 @@ public class MainActivity extends AppCompatActivity {
 
         startLocationUpdates();
 
-        // Send info
-        queue = Volley.newRequestQueue(this);
     }
 
     /**
@@ -215,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mCurrentLocation = locationResult.getLastLocation();
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                //mLastUpdateTime = DateFormat.getTimeInstance().format(new ZonedDateTime());
                 updateUI();
             }
         };
@@ -327,6 +336,25 @@ public class MainActivity extends AppCompatActivity {
                     mCurrentLocation.getLongitude()));
             mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
                     mLastUpdateTimeLabel, mLastUpdateTime));
+
+           // String pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS";
+           // DateTimeFormatter Parser = DateTimeFormatter.ofPattern(pattern).ISO_DATE;
+
+
+            HttpClient.SendPositionTask mAuthTask = new HttpClient.SendPositionTask(
+                    Long.decode("1"),
+                    mLastLocation.getLatitude(),
+                    mLastLocation.getLongitude(),
+                    mLastUpdateTime);
+            mAuthTask.execute((Void) null);
+
+//            mLatitudeText.setText(String.format(Locale.ENGLISH, "%s: %f", mLatitudeLabel,
+//                    mCurrentLocation.getLatitude()));
+//            mLongitudeText.setText(String.format(Locale.ENGLISH, "%s: %f", mLongitudeLabel,
+//                    mCurrentLocation.getLongitude()));
+//            mLastUpdateTimeTextView.setText(String.format(Locale.ENGLISH, "%s: %s",
+//                    mLastUpdateTimeLabel, mLastUpdateTime));
+            //queue.add(preparePostRequest());
         }
     }
 
@@ -399,11 +427,16 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    protected void launchLoginActivity() {
+    protected void launchLoginActivity(RequestQueue queue) {
         Intent intent = new Intent(this, LoginActivity.class);
+        //intent.putExtra("queue", queue);
         startActivity(intent);
     }
 
+    protected void launchMapActivity() {
+        Intent intent = new Intent(this, map.class);
+        startActivity(intent);
+    }
 
     /**
      * Shows a {@link Snackbar} using {@code text}.
@@ -532,6 +565,38 @@ public class MainActivity extends AppCompatActivity {
         }
 
         updateUI();
+    }
+
+    private StringRequest preparePostRequest() {
+        return new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        // response
+                        Log.d("Response", response);
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // error
+                        Log.d("Error.Response", error.getMessage());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("name", "Alif");
+                params.put("domain", "http://itsalif.info");
+
+                return params;
+            }
+        };
+//queue.add(postRequest);
     }
 
 
