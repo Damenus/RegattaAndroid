@@ -204,7 +204,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password, this);
+            mAuthTask = new UserLoginTask("kapitan", "admin", this);
+            //mAuthTask = new UserLoginTask(email, password, this);
             mAuthTask.execute((Void) null);
         }
     }
@@ -372,8 +373,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             HttpPost httpost = new HttpPost(website+"/api/authentication");
 
             List <NameValuePair> nvps = new ArrayList <NameValuePair>();
-            nvps.add(new BasicNameValuePair("j_username", "kapitan")); //IDToken1 login
-            nvps.add(new BasicNameValuePair("j_password", "admin")); //IDToken2 password
+            nvps.add(new BasicNameValuePair("j_username", mEmail)); //IDToken1 login
+            nvps.add(new BasicNameValuePair("j_password", mPassword)); //IDToken2 password
             nvps.add(new BasicNameValuePair("remember-me", "false"));
 
             httpost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
@@ -497,7 +498,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             try {
                 // Simulate network access.
                 cookie();
-                Thread.sleep(2000);
+                Thread.sleep(20);
                 launchMainActivity();
             } catch (InterruptedException e) {
                 return false;

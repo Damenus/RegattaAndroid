@@ -53,7 +53,7 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_joined_list_regatts);
 
-        button = (Button) findViewById(R.id.button2);
+        //button = (Button) findViewById(R.id.button2);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
 //        try {
@@ -158,13 +158,15 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
 
             ArrayList<String> eventsAttendedList = new ArrayList<>();;
 
+            JSONObject fieldsJson = null;
             try {
-                JSONArray jsonarray = new JSONArray(body);
-                for (int i = 0; i < jsonarray.length(); i++) {
-                    JSONObject jsonobject = jsonarray.getJSONObject(i);
+                fieldsJson = new JSONObject(body);
+                JSONArray keys = fieldsJson.names();
+                for (int i = 1; i <= keys.length(); i++){
+                    JSONObject jsonobject = fieldsJson.getJSONObject(String.valueOf(i));
                     String id = jsonobject.getString("id");
                     String name = jsonobject.getString("name");
-                    eventsAttendedList.add(id + " " + name);
+                    eventsAttendedList.add(String.valueOf(i) + id + " " + name);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -240,6 +242,4 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
 
         }
     }
-
-
 }
