@@ -30,10 +30,25 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static java.net.Proxy.Type.HTTP;
 
 /**
  * A login screen that offers login via email/password.
@@ -62,6 +77,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+
+    public String JSESSIONID;
+    public String XSRFTOKEN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,19 +204,22 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            //mAuthTask = new UserLoginTask("kapitan", "admin", this);
+            mAuthTask = new UserLoginTask(email, password, this);
             mAuthTask.execute((Void) null);
         }
     }
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("@");
+        //return email.contains("@");
+        return true;
     }
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        //return password.length() > 4;
+        return true;
     }
 
     /**
@@ -292,10 +313,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     protected void launchMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, JoinedListRegattsActivity.class);
         EditText editText = (EditText) findViewById(R.id.password);
         String message = editText.getText().toString();
-        intent.putExtra("dd", message);
+        intent.putExtra("JSESSIONID", this.JSESSIONID);
+        intent.putExtra("XSRFTOKEN", this.XSRFTOKEN);
         startActivity(intent);
     }
 
@@ -307,10 +329,166 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         private final String mEmail;
         private final String mPassword;
+        public String JSESSIONID;
+        public String XSRFTOKEN;
+        private LoginActivity activity;
+        DefaultHttpClient httpclient;
+        String website = "http://vps485240.ovh.net:8080";
+       // String website = "http://192.168.0.150:8080";
 
-        UserLoginTask(String email, String password) {
+        UserLoginTask(String email, String password, LoginActivity activity) {
             mEmail = email;
             mPassword = password;
+            this.activity = activity;
+        }
+
+        protected void cookie() throws IOException {
+            httpclient = HttpClient.getInstance();
+
+          //  HttpGet httpget = new HttpGet("https://portal.sun.com/portal/dt");
+
+            HttpGet httpget = new HttpGet(website);
+            HttpResponse response = httpclient.execute(httpget);
+            HttpEntity entity = response.getEntity();
+
+            System.out.println("Login form get: " + response.getStatusLine());
+            if (entity != null) {
+                entity.consumeContent();
+            }
+            System.out.println("Initial set of cookies:");
+            List<Cookie> cookies = httpclient.getCookieStore().getCookies();
+            if (cookies.isEmpty()) {
+                System.out.println("None");
+            } else {
+                for (int i = 0; i < cookies.size(); i++) {
+                    System.out.println("- " + cookies.get(i).toString());
+                }
+            }
+
+//            HttpPost httpost = new HttpPost("https://portal.sun.com/amserver/UI/Login?" +
+//                    "org=self_registered_users&" +
+//                    "goto=/portal/dt&" +
+//                    "gotoOnFail=/portal/dt?error=true");
+
+            HttpPost httpost = new HttpPost(website+"/api/authentication");
+
+            List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+            nvps.add(new BasicNameValuePair("j_username", mEmail)); //IDToken1 login
+            nvps.add(new BasicNameValuePair("j_password", mPassword)); //IDToken2 password
+            nvps.add(new BasicNameValuePair("remember-me", "false"));
+
+            httpost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+            httpost.setHeader("X-XSRF-TOKEN", cookies.get(0).getValue().toString());
+
+            response = httpclient.execute(httpost);
+            entity = response.getEntity();
+
+
+            System.out.println("Login form get: " + response.getStatusLine());
+            if (entity != null) {
+                entity.consumeContent();
+            }
+
+            System.out.println("Post logon cookies:");
+            cookies = httpclient.getCookieStore().getCookies();
+            if (cookies.isEmpty()) {
+                System.out.println("None");
+            } else {
+                for (int i = 0; i < cookies.size(); i++) {
+                    System.out.println("- " + cookies.get(i).toString());
+                    System.out.println("- " + cookies.get(i).getName());
+                    if(cookies.get(i).getName().equals("JSESSIONID")){
+                        JSESSIONID = cookies.get(i).getValue().toString();
+                        activity.JSESSIONID = cookies.get(i).getValue().toString();
+                        HttpClient.setJSESSIONID(JSESSIONID);
+                    }
+                    if(cookies.get(i).getName().toString().equals("XSRF-TOKEN")){
+                        XSRFTOKEN = cookies.get(i).getValue().toString();
+                        activity.XSRFTOKEN = cookies.get(i).getValue().toString();
+                        HttpClient.setXSRFTOKEN(XSRFTOKEN);
+                    }
+                }
+            }
+
+            //response.disconnect();
+//            httpget = new HttpGet(website+"/api/captain-events");
+//
+//            httpget.setHeader("X-XSRF-TOKEN", XSRFTOKEN);
+//            httpget.setHeader("JSESSIONID", JSESSIONID);
+//
+//            response = httpclient.execute(httpget);
+//            entity = response.getEntity();
+//
+//            if (entity != null) {
+//                entity.consumeContent();
+//            }
+
+        }
+
+        protected void cookie2() throws IOException {
+            DefaultHttpClient httpclient = HttpClient.getInstance();
+
+            //  HttpGet httpget = new HttpGet("https://portal.sun.com/portal/dt");
+
+//        HttpGet httpget = new HttpGet("http://vps485240.ovh.net:8080/");
+//        HttpResponse response = httpclient.execute(httpget);
+//        HttpEntity entity = response.getEntity();
+//
+//        System.out.println("Login form get: " + response.getStatusLine());
+//        if (entity != null) {
+//            entity.consumeContent();
+//        }
+//        System.out.println("Initial set of cookies:");
+//        List<Cookie> cookies = httpclient.getCookieStore().getCookies();
+//        if (cookies.isEmpty()) {
+//            System.out.println("None");
+//        } else {
+//            for (int i = 0; i < cookies.size(); i++) {
+//                System.out.println("- " + cookies.get(i).toString());
+//            }
+//        }
+
+//            HttpPost httpost = new HttpPost("https://portal.sun.com/amserver/UI/Login?" +
+//                    "org=self_registered_users&" +
+//                    "goto=/portal/dt&" +
+//                    "gotoOnFail=/portal/dt?error=true");
+
+            HttpPost httpost = new HttpPost(website+"/api/captain-events");
+
+//        List <NameValuePair> nvps = new ArrayList<NameValuePair>();
+//        nvps.add(new BasicNameValuePair("j_username", "organizator")); //IDToken1 login
+//        nvps.add(new BasicNameValuePair("j_password", "admin")); //IDToken2 password
+//        nvps.add(new BasicNameValuePair("remember-me", "false"));
+//
+//        httpost.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
+            httpost.setHeader("X-XSRF-TOKEN", XSRFTOKEN);
+            httpost.setHeader("JSESSIONID", JSESSIONID);
+
+            HttpResponse response = httpclient.execute(httpost);
+            HttpEntity entity = response.getEntity();
+
+
+            System.out.println("Login form get: " + response.getStatusLine());
+            if (entity != null) {
+                entity.consumeContent();
+            }
+
+            System.out.println("Post logon cookies:");
+            List<Cookie> cookies = httpclient.getCookieStore().getCookies();
+            if (cookies.isEmpty()) {
+                System.out.println("None");
+            } else {
+                for (int i = 0; i < cookies.size(); i++) {
+                    System.out.println("- " + cookies.get(i).toString());
+
+                }
+            }
+
+            // When HttpClient instance is no longer needed,
+            // shut down the connection manager to ensure
+            // immediate deallocation of all system resources
+            //httpclient.getConnectionManager().shutdown();
+            ///api/captain-events
         }
 
         @Override
@@ -319,9 +497,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             try {
                 // Simulate network access.
-                Thread.sleep(2000);
+                cookie();
+                Thread.sleep(20);
+                launchMainActivity();
             } catch (InterruptedException e) {
                 return false;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             for (String credential : DUMMY_CREDENTIALS) {
