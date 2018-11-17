@@ -35,8 +35,8 @@ public class HttpClient {
     static DefaultHttpClient instance;
     static MainActivity mainActivity;
 
-    //static String website = "http://vps485240.ovh.net:8080";
-    static String website = "http://192.168.0.150:8080";
+    static String website = "http://vps485240.ovh.net:8080";
+    //static String website = "http://192.168.0.150:8080";
 
     static String JSESSIONID;
     static String XSRFTOKEN;
@@ -111,8 +111,8 @@ public class HttpClient {
         private Double lng;
         private String time;
         private String teamId;
-        //String website = "http://vps485240.ovh.net:8080";
-        String website = "http://192.168.0.150:8080";
+        String website = "http://vps485240.ovh.net:8080";
+        //String website = "http://192.168.0.150:8080";
         String api = "/api/positions";
 
 
@@ -121,10 +121,18 @@ public class HttpClient {
             this.lat = lat;
             this.lng = lng;
             this.shortTime = time;
+            int godzina = Integer.decode(time.split(":")[0]);
+            String minuta = time.split(":")[1];
+            String reszta = time.split(":")[1];
+            String godzinas = String.valueOf(godzina);
+            if(godzina < 10)
+                godzinas = "0" + String.valueOf(godzina);
+
+
             if(time.contains("PM")) {
-                this.time = "2018-06-06" + "T1" + time.replace("PM","").replace(" ","") + "+02:00[Europe/Warsaw]";
+                this.time = "2018-06-07" + "T" + godzinas + ":" + minuta + ":" + reszta.replace("PM","").replace(" ","") + "+02:00[Europe/Warsaw]";
             } else {
-                this.time =  "2018-06-06" + "T0" + time.replace("AM","").replace(" ","") + "+02:00[Europe/Warsaw]";
+                this.time =  "2018-06-07" + "T" + godzinas + ":" + minuta + ":"  + reszta.replace("AM","").replace(" ","") + "+02:00[Europe/Warsaw]";
             }
         }
 

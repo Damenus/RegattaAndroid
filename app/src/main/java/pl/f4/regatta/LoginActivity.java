@@ -204,8 +204,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask("kapitan", "admin", this);
-            //mAuthTask = new UserLoginTask(email, password, this);
+            //mAuthTask = new UserLoginTask("kapitan", "admin", this);
+            mAuthTask = new UserLoginTask(email, password, this);
             mAuthTask.execute((Void) null);
         }
     }
@@ -333,8 +333,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         public String XSRFTOKEN;
         private LoginActivity activity;
         DefaultHttpClient httpclient;
-        //String website = "http://vps485240.ovh.net:8080";
-        String website = "http://192.168.0.150:8080";
+        String website = "http://vps485240.ovh.net:8080";
+       // String website = "http://192.168.0.150:8080";
 
         UserLoginTask(String email, String password, LoginActivity activity) {
             mEmail = email;

@@ -186,11 +186,11 @@ public class MainActivity extends AppCompatActivity {
         startLocationUpdates();
 
         webview = (WebView) findViewById(R.id.webview);
-        //webview.loadUrl("http://vps485240.ovh.net:8080/");
-        webview.getSettings().setJavaScriptEnabled(true);
-        webview.loadData(getMap(String.valueOf(18.0),String.valueOf(54.0), String.valueOf(15)), "text/html", null);
-        //webview.loadData(summary, "text/html", null);
 
+        webview.getSettings().setJavaScriptEnabled(true);
+        webview.loadData(getMap(String.valueOf(18.541861),String.valueOf(54.5209883), String.valueOf(15)), "text/html", null);
+        //webview.loadData(summary, "text/html", null);
+        //webview.loadUrl("http://192.168.0.150:8080/#/event/show/1");
     }
 
     /**
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
 
            // String pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS";
            // DateTimeFormatter Parser = DateTimeFormatter.ofPattern(pattern).ISO_DATE;
-
+            webview.loadData(getMap(String.valueOf(mLastLocation.getLongitude()),String.valueOf(mLastLocation.getLatitude()), String.valueOf(15)), "text/html", null);
             //webview.reload();
             if(choosedTeam) {
                 HttpClient.SendPositionTask mAuthTask = new HttpClient.SendPositionTask(
@@ -603,6 +603,7 @@ public class MainActivity extends AppCompatActivity {
 //queue.add(postRequest);
     }
 
+    //https://wiki.openseamap.org/wiki/OpenSeaMap_in_Website
     public String getMap(String lon, String lat, String zoom) {
 
         return "\n" +

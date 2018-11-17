@@ -127,8 +127,8 @@ public class JoinedListRegattsActivity extends AppCompatActivity implements MyRe
         public String XSRFTOKEN;
         private JoinedListRegattsActivity activity;
         DefaultHttpClient httpclient;
-        //String website = "http://vps485240.ovh.net:8080";
-        String website = "http://192.168.0.150:8080";
+        String website = "http://vps485240.ovh.net:8080";
+        //String website = "http://192.168.0.150:8080";
 
         UserLoginTask(String email, String password, JoinedListRegattsActivity activity) {
             mEmail = email;
